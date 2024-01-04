@@ -571,7 +571,7 @@ add_module() {
                     found=1
                     module="${value##*/}" module="${module%.ko*}"
                     quiet "adding module: %s (%s)" "$module" "$value"
-                    _modpaths["$value"]=1
+                    _modpaths[".$value"]=1
                     _addedmodules["${module//-/_}"]=1
                 fi
                 ;;
@@ -634,25 +634,28 @@ add_full_dir() {
     local f='' filter="${2:-*}" strip_prefix="$3"
 
     if [[ -n "$1" && -d "$1" ]]; then
-        add_dir "$1"
-
-        for f in "$1"/*; do
-            if [[ -L "$f" ]]; then
-                # Explicit glob matching
-                # shellcheck disable=SC2053
-                if [[ "$f" == $filter ]]; then
-                    add_symlink "${f#"${strip_prefix}"}" "$(readlink "$f")"
+        if [[ -z $filter && -z $strip_prefix ]]; then
+            tar --hard-dereference -C / -cpf - ."$1" | tar -C "${BUILDROOT}" -xpf -
+        else
+            add_dir "$1"
+            for f in "$1"/*; do
+                if [[ -L "$f" ]]; then
+                    # Explicit glob matching
+                    # shellcheck disable=SC2053
+                    if [[ "$f" == $filter ]]; then
+                        add_symlink "${f#"${strip_prefix}"}" "$(readlink "$f")"
+                    fi
+                elif [[ -d "$f" ]]; then
+                    add_full_dir "$f" "$filter" "$strip_prefix"
+                elif [[ -f "$f" ]]; then
+                    # Explicit glob matching
+                    # shellcheck disable=SC2053
+                    if [[ "$f" == $filter ]]; then
+                        add_file "$f" "${f#"${strip_prefix}"}"
+                    fi
                 fi
-            elif [[ -d "$f" ]]; then
-                add_full_dir "$f" "$filter" "$strip_prefix"
-            elif [[ -f "$f" ]]; then
-                # Explicit glob matching
-                # shellcheck disable=SC2053
-                if [[ "$f" == $filter ]]; then
-                    add_file "$f" "${f#"${strip_prefix}"}"
-                fi
-            fi
-        done
+            done
+        fi
     fi
 }
 
@@ -730,30 +733,21 @@ add_file() {
         return 1
     fi
 
-    # check if $src is a symlink
-    if [[ -L "$src" ]]; then
-        srcrealpath="$(realpath -- "$src")"
-        if [[ "$srcrealpath" != "$dest" ]]; then
-            # add the target file
-            add_file "$srcrealpath" "$srcrealpath" "$mode"
-            # create the symlink
-            add_symlink "$dest" "$src"
-            return
-        fi
-    fi
-
-    # unlike install, cp does not create directories leading to the destination
-    [[ -z "$mode" ]] && add_dir "${dest%/*}"
-
-    if [[ -e "${BUILDROOT}${dest}" ]]; then
-        quiet 'overwriting file: %s' "$dest"
-    else
+    if [[ ! -e "${BUILDROOT}${dest}" ]]; then
         quiet 'adding file: %s' "$dest"
-    fi
-    if [[ -z "$mode" ]]; then
-        command cp --remove-destination --preserve=mode,ownership "$src" "${BUILDROOT}${dest}"
-    else
-        command install -Dm"$mode" "$src" "${BUILDROOT}${dest}"
+        if [[ "$src" != "$dest" ]]; then
+            command tar --hard-dereference --transform="s|$src|$dest|" -C / -cpf - ."$src" | tar -C "${BUILDROOT}" -xpf -
+        else
+            command tar --hard-dereference -C / -cpf - ."$src" | tar -C "${BUILDROOT}" -xpf -
+        fi
+        if [[ -L "$src" ]]; then
+            srcrealpath="$(realpath -- "$src")"
+            add_file  "$srcrealpath" "$srcrealpath" "$mode"
+        else
+            if [[ -n $mode ]]; then
+                command chmod "$mode" ${BUILDROOT}${dest}
+            fi
+        fi
     fi
 }
 
@@ -1081,10 +1075,11 @@ install_modules() {
         return 0
     fi
 
-    for m in "$@"; do
-        add_file "$m"
-        # unzip modules prior to recompression
-        if [[ "$MODULES_DECOMPRESS" == 'yes' ]]; then
+    command tar --hard-dereference -C / -cpf - "$@" | tar -C "${BUILDROOT}" -xpf -
+
+    if [[ "$MODULES_DECOMPRESS" == 'yes' ]]; then
+        for m in "$@"; do
+            # unzip modules prior to recompression
             case "$m" in
                 *.xz)
                     xz_comp+=("$BUILDROOT/$m")
@@ -1096,12 +1091,11 @@ install_modules() {
                     zst_comp+=("$BUILDROOT/$m")
                     ;;
             esac
-        fi
-    done
-
-    (( ${#xz_comp[*]} )) && xz -d "${xz_comp[@]}"
-    (( ${#gz_comp[*]} )) && gzip -d "${gz_comp[@]}"
-    (( ${#zst_comp[*]} )) && zstd -d --rm -q "${zst_comp[@]}"
+        done
+        (( ${#xz_comp[*]} )) && xz -d "${xz_comp[@]}"
+        (( ${#gz_comp[*]} )) && gzip -d "${gz_comp[@]}"
+        (( ${#zst_comp[*]} )) && zstd -d --rm -q "${zst_comp[@]}"
+    fi
 
     msg "Generating module dependencies"
     map add_file "$_d_kmoduledir"/modules.{builtin,builtin.modinfo,order}
