@@ -49,6 +49,10 @@ build() {
     add_binary 'mkswap'
 
     [[ -f /etc/crypttab.initramfs ]] && add_file '/etc/crypttab.initramfs' '/etc/crypttab'
+
+    # Lock the root account to prevent tampering with the boot chain on a
+    # system using LUKS with TPM2.
+    printf 'root:!*::::::1:\n' | add_file - '/etc/shadow' 0400
 }
 
 help() {
