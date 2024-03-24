@@ -103,10 +103,10 @@ install_kernel() {
         current_template=$(sed "s|%PKGBASE%|${pkgbase}|g" /usr/share/mkinitcpio/hook.preset)
         if ! cmp "${preset}" <(echo "${current_template}") &>/dev/null; then
             if [[ -e "${preset}.pacnew" ]]; then
-                echo "==> WARNING: Unhandled pacnew in ${preset}.pacnew"
+                printf '==> WARNING: Unhandled pacnew in %s.pacnew\n' "$preset"
             else
-                echo "==> WARNING: Current preset does not match the template, created ${preset}.pacnew"
-                echo "${current_template}" | install -Dm644 /dev/stdin "${preset}.pacnew"
+                printf '==> WARNING: Current preset does not match the template, created %s.pacnew\n' "$preset"
+                printf '%s\n' "$current_template" | install -Dm644 /dev/stdin "${preset}.pacnew"
             fi
         fi
     # If the preset does not exist and we have a .pacsave, create it by moving the .pacsave
