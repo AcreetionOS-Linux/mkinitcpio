@@ -100,6 +100,7 @@ install_kernel() {
 
     # If the preset exists already, verify it matches the default template, otherwise push a .pacnew
     if [[ -e "$preset" ]]; then
+        local current_template
         current_template=$(sed "s|%PKGBASE%|${pkgbase}|g" /usr/share/mkinitcpio/hook.preset)
         if ! cmp "${preset}" <(echo "${current_template}") &>/dev/null; then
             if [[ -e "${preset}.pacnew" ]]; then
