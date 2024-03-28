@@ -1017,12 +1017,13 @@ initialize_buildroot() {
     echo 1 > "${earlyroot}/early_cpio"
 
     # base directory structure
-    install -dm755 "$buildroot"/{new_root,proc,sys,dev,run,tmp,var,etc,usr/{local{,/bin,/sbin,/lib},lib,bin}}
+    install -dm755 "$buildroot"/{sysroot,proc,sys,dev,run,tmp,var,etc,usr/{local{,/bin,/sbin,/lib},lib,bin}}
     ln -s "usr/lib" "$buildroot/lib"
     ln -s "bin"     "$buildroot/usr/sbin"
     ln -s "usr/bin" "$buildroot/bin"
     ln -s "usr/bin" "$buildroot/sbin"
     ln -s "/run"    "$buildroot/var/run"
+    ln -s "sysroot" "$buildroot/new_root"
 
     case "$arch" in
         x86_64)
