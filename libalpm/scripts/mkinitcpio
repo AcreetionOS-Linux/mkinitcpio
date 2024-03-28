@@ -98,15 +98,25 @@ install_kernel() {
     local pkgbase="$1"
     local kernel preset="/etc/mkinitcpio.d/${pkgbase}.preset"
 
-    if [[ ! -e "$preset" ]]; then
-        if [[ -e "$preset.pacsave" ]]; then
-            # move the pacsave to the template
-            mv -- "${preset}.pacsave" "$preset"
-        else
-            # create the preset from the template
-            sed "s|%PKGBASE%|${pkgbase}|g" /usr/share/mkinitcpio/hook.preset \
-                | install -Dm644 /dev/stdin "$preset"
+    # If the preset exists already, verify it matches the default template, otherwise push a .pacnew
+    if [[ -e "$preset" ]]; then
+        local current_template
+        current_template=$(sed "s|%PKGBASE%|${pkgbase}|g" /usr/share/mkinitcpio/hook.preset)
+        if ! cmp "${preset}" <(echo "${current_template}") &>/dev/null; then
+            if [[ -e "${preset}.pacnew" ]]; then
+                printf '==> WARNING: Unhandled pacnew in %s.pacnew\n' "$preset"
+            else
+                printf '==> WARNING: Current preset does not match the template, created %s.pacnew\n' "$preset"
+                printf '%s\n' "$current_template" | install -Dm644 /dev/stdin "${preset}.pacnew"
+            fi
         fi
+    # If the preset does not exist and we have a .pacsave, create it by moving the .pacsave
+    elif [[ -e "$preset.pacsave" ]]; then
+        mv -- "${preset}.pacsave" "$preset"
+    # If we have nothing, create the preset from scratch using the default template
+    else
+        sed "s|%PKGBASE%|${pkgbase}|g" /usr/share/mkinitcpio/hook.preset \
+            | install -Dm644 /dev/stdin "$preset"
     fi
 
     (
