@@ -1112,25 +1112,31 @@ _d_workdir="$(initialize_buildroot "$KERNELVERSION" "$_opttargetdir")" || exit 1
 BUILDROOT="${_opttargetdir:-$_d_workdir/root}"
 EARLYROOT="$_d_workdir/early"
 
-# Source additional configuration files, if no configuration file has been defined either with "-c" or via preset file
-if [[ -d "$_d_config" ]] && (( _optconfd )); then
-    mapfile -d '' conf_files < <(LC_ALL=C.UTF-8 find "$_d_config" -maxdepth 1 -xtype f -name '*.conf' -print0 | sed -z 's/.*\///' | LC_ALL=C.UTF-8 sort -zVu)
-    if (( ${#conf_files[@]} )); then
-        tmpfile="$(mktemp -t mkinitcpio.XXXXXX)"
-        _tmpfiles+=("$tmpfile")
-        cat -- "$_f_config" > "$tmpfile" || die "Failed to read configuration '%s'" "$_f_config"
-        for conf in "${conf_files[@]}"; do
-            if [[ -r "$_d_config/$conf" ]]; then
-                cat -- "$_d_config/$conf" >> "$tmpfile"
-                msg "Using drop-in configuration file: '%s'" "$conf"
-            fi
-        done
-        _f_config="$tmpfile"
+unset INCLUDE
+# shellcheck disable=SC1091 source=mkinitcpio.conf
+. "$_f_config" || die "Failed to read configuration '%s'" "$_f_config"
+
+if [[ ! -v INCLUDE ]]; then
+    # Legacy behavior if INCLUDE is not set in $_f_config, source additional configuration files,
+    # if no configuration file has been defined either with "-c" or via preset file.
+    if (( _optconfd )); then
+        mapfile -d '' INCLUDE < <(LC_ALL=C.UTF-8 find "$_d_config" -maxdepth 1 -xtype f -name '*.conf' -print0 | LC_ALL=C.UTF-8 sort -z)
+    else
+        INCLUDE=()
     fi
 fi
 
-# shellcheck disable=SC1091 source=mkinitcpio.conf
-. "$_f_config" || die "Failed to read configuration '%s'" "$_f_config"
+# Include further configuration
+for conf in "${INCLUDE[@]}"; do
+    [[ -f "$conf" ]] || continue
+    if [[ -r "$conf" ]]; then
+        msg "Using drop-in configuration file: '%s'" "$conf"
+        # shellcheck disable=SC1090
+        . "$conf"
+    else
+        warning "Cannot read drop-in configuration file: '%s'" "$conf"
+    fi
+done
 
 arrayize_config
 
