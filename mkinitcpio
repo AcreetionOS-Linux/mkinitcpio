@@ -1121,6 +1121,10 @@ if [[ ! -v INCLUDE ]]; then
     # if no configuration file has been defined either with "-c" or via preset file.
     if (( _optconfd )); then
         mapfile -d '' INCLUDE < <(LC_ALL=C.UTF-8 find "$_d_config" -maxdepth 1 -xtype f -name '*.conf' -print0 | LC_ALL=C.UTF-8 sort -z)
+        if (( ${#INCLUDE[@]} )); then
+            warning "Including drop-in configuration files from '%s' implicitly." "$_d_config"
+            warning "This behavior is deprecated. Add 'INCLUDE=(\"%s/\"*.conf)' to '%s' instead." "$_d_config" "$_f_config"
+        fi
     else
         INCLUDE=()
     fi
