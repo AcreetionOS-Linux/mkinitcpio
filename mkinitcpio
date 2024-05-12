@@ -1114,7 +1114,7 @@ EARLYROOT="$_d_workdir/early"
 
 unset INCLUDE
 # shellcheck disable=SC1091 source=mkinitcpio.conf
-. "$_f_config" || die "Failed to read configuration '%s'" "$_f_config"
+LC_ALL=C.UTF-8 . "$_f_config" || die "Failed to read configuration '%s'" "$_f_config"
 
 if [[ ! -v INCLUDE ]]; then
     # Legacy behavior if INCLUDE is not set in $_f_config, source additional configuration files,
@@ -1136,7 +1136,7 @@ for conf in "${INCLUDE[@]}"; do
     if [[ -r "$conf" ]]; then
         msg "Using drop-in configuration file: '%s'" "$conf"
         # shellcheck disable=SC1090
-        . "$conf"
+        LC_ALL=C.UTF-8 . "$conf"
     else
         warning "Cannot read drop-in configuration file: '%s'" "$conf"
     fi
