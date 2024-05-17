@@ -1,0 +1,24 @@
+#!/hint/bash
+
+# used by add_dlopen_libraries
+# shellcheck disable=SC2034
+declare -A dlopen_features=(
+    [archive]=0
+    [bpf]=0
+    [cryptsetup]=1
+    [dw]=0
+    [elf]=0
+    [fido2]=1
+    [gcrypt]=0
+    [idn]=0
+    [ip4tc]=0
+    [kmod]=0
+    [lz4]=0
+    [lzma]=0
+    [p11-kit]=0
+    [pcre2]=0
+    [pwquality]=0
+    [qrencode]=0
+    [tpm]=1
+    [zstd]=0
+)

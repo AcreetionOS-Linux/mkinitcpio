@@ -124,20 +124,6 @@ build() {
         rescue.target \
         emergency.target
 
-    # add libraries dlopen()ed (hard and optional dependencies):
-    #  tss2-*   -> tpm2-util
-    #  kmod     -> systemd-shared
-    #  qrencode -> bsod
-    for LIB in kmod tss2-{esys,rc,mu,tcti-'*'} qrencode; do
-        LC_ALL=C.UTF-8 find /usr/lib/ -maxdepth 1 -name "lib${LIB}.so*" | while read -r FILE; do
-            if [[ -L "${FILE}" ]]; then
-                add_symlink "${FILE}"
-            else
-                add_binary "${FILE}"
-            fi
-        done
-    done
-
     add_symlink "/usr/lib/systemd/system/default.target" "initrd.target"
     add_symlink "/usr/lib/systemd/system/ctrl-alt-del.target" "reboot.target"
 
