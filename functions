@@ -997,6 +997,82 @@ add_runscript() {
     done
 }
 
+add_dlopen_libraries() {
+    local section=() line='' desc='' joined_json=''
+    local -i header=0
+
+    if [[ -z "$hookname" ]]; then
+        error "add_dlopen_libraries called outside of build hook"
+        return
+    fi
+
+    mapfile -t section < <(LC_ALL=C.UTF-8 readelf --string-dump=.note.dlopen "$1" 2>/dev/null)
+
+    for line in "${section[@]:2}"; do
+        desc="${line:12}"
+
+        if [[ "$desc" == "|@"* ]]; then
+            # Encountered a header (in the form of "|@FDO").
+            # The next line would contain the actual JSON metadata.
+            header=1
+            continue
+        fi
+
+        if (( header )); then
+            joined_json+="$desc"
+            header=0 # Reset the header identifier
+        fi
+    done
+
+    if [[ -z "$joined_json" ]]; then
+        return 0
+    fi
+
+    local rule_file='' note=() rule='' sonames=() soname=''
+    local -A dlopen_libraries=()
+
+    # _d_dlopen_rules is assigned in mkinitcpio
+    # shellcheck disable=SC2154
+    if rule_file="$(PATH="$_d_dlopen_rules" type -P "$hookname")"; then
+        # shellcheck disable=SC1090
+        . "$rule_file"
+    fi
+
+    while read -ra note; do
+        # < 0: known, but decided based on the priority at runtime
+        rule="${dlopen_libraries["${note[0]}"]}"
+        if [[ ( -n "$rule" && "$rule" -eq 0 ) || # disabled explicitly
+              ( "${note[1]}" == "suggested" && ( -z "$rule" || "$rule" -lt 0 ) ) ]]; then
+            continue
+        fi
+
+        sonames=("${note[@]:2}")
+
+        # Remember libraries we've seen to avoid infinite recursion
+        #
+        # Note that the binary might accept multiple versions of a lib
+        # through dlopen(), e.g. libbpf.so.1 and libbpf.so.0, and
+        # we record the "combination" here, i.e. "libbpf.so.1 libbpf.so.0"
+        # as a single string. Why? Because otherwise if another feature
+        # accepts libbpf.so.1 only, we wouldn't consider it an error,
+        # as we think we've seen/evaluated it.
+        if in_array "${sonames[*]}" "${seen_dlopen_libs[@]}"; then
+            continue
+        fi
+        seen_dlopen_libs+=("${sonames[*]}")
+
+        for soname in "${sonames[@]}"; do
+            if add_binary "/usr/lib/$soname"; then
+                continue 2 # Succeeded? Onto the next feature
+            fi
+        done
+
+        # Nothing got added for the feature
+        error "dlopen feature '%s' requested, but no compatible library is found" "${note[0]}"
+        (( ++_builderrors ))
+    done < <(jq --raw-output '.[] | [.feature, .priority // "recommended", .soname[]] | @sh' <<<"$joined_json")
+}
+
 add_binary() {
     # Add a binary file to the initcpio image. library dependencies will
     # be discovered and added.
@@ -1004,7 +1080,7 @@ add_binary() {
     #   $2: destination on initcpio (optional, defaults to same as source)
     #   $3: mode (optional)
 
-    local line='' regex='' binary='' dest='' mode='' sodep='' shebang='' interpreter='' args=()
+    local binary='' dest='' mode='' shebang='' interpreter='' args=()
 
     if [[ "${1:0:1}" != '/' ]]; then
         if ! binary="$(type -P "$1")"; then
@@ -1051,6 +1127,8 @@ add_binary() {
         return 0
     fi
 
+    local line='' regex='' sodep=''
+
     # resolve sodeps
     regex='^(|.+ )(/.+) \(0x[a-fA-F0-9]+\)'
     while read -r line; do
@@ -1062,10 +1140,21 @@ add_binary() {
             continue
         fi
 
-        if [[ -f "$sodep" && ! -e "${BUILDROOT}${sodep}" ]]; then
-            add_file "$sodep" "$sodep"
+        if [[ ! -f "$sodep" ]]; then
+            continue
         fi
+
+        if [[ ! -e "${BUILDROOT}${sodep}" ]]; then
+            add_file "$sodep"
+        fi
+
+        # Always re-evaluate dlopen deps, regardless of whether
+        # ${BUILDROOT}${sodep} exists, since the rules for features
+        # differ between build hooks.
+        add_dlopen_libraries "$sodep"
     done <<<"$lddout"
+
+    add_dlopen_libraries "$binary"
 
     return 0
 }
@@ -1222,7 +1311,7 @@ initialize_buildroot() {
 }
 
 run_build_hook() {
-    local hookname="$1" script='' resolved=''
+    local hookname="$1" script='' resolved='' seen_dlopen_libs=()
     # shellcheck disable=SC2034
     local MODULES=() BINARIES=() FILES=() SCRIPT=''
 

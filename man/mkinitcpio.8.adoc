@@ -483,6 +483,10 @@ _/etc/initcpio/install_::
 _/usr/lib/initcpio/install_::
     Search path for build time hooks.
 
+_/etc/initcpio/dlopen-rules_::
+_/usr/lib/initcpio/dlopen-rules_::
+    Search path for .note.dlopen rules for *add_binary*.
+
 _/etc/initcpio/hooks_::
 _/usr/lib/initcpio/hooks_::
     Search path for early userspace runtime hooks.

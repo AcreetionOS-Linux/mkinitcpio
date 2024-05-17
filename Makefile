@@ -12,9 +12,11 @@ DIRS = \
 	/etc/mkinitcpio.conf.d \
 	/etc/initcpio/hooks \
 	/etc/initcpio/install \
+	/etc/initcpio/dlopen-rules \
 	/etc/initcpio/post \
 	/usr/lib/initcpio/hooks \
 	/usr/lib/initcpio/install \
+	/usr/lib/initcpio/dlopen-rules \
 	/usr/lib/initcpio/post \
 	/usr/lib/initcpio/udev \
 	/usr/lib/kernel/install.d \
@@ -48,6 +50,7 @@ prepare:
 	    -e 's|\(^_f_functions\)=.*|\1=/usr/lib/initcpio/functions|' \
 	    -e 's|\(^_d_hooks\)=.*|\1=/etc/initcpio/hooks:/usr/lib/initcpio/hooks|' \
 	    -e 's|\(^_d_install\)=.*|\1=/etc/initcpio/install:/usr/lib/initcpio/install|' \
+	    -e 's|\(^_d_dlopen_rules\)=.*|\1=/etc/initcpio/dlopen-rules:/usr/lib/initcpio/dlopen-rules|' \
 	    -e 's|\(^_d_post\)=.*|\1=/etc/initcpio/post:/usr/lib/initcpio/post|' \
 	    -e 's|\(^_d_presets\)=.*|\1=/etc/mkinitcpio.d|' \
 	    -e 's|\(^_d_config\)=.*|\1=/etc/mkinitcpio.conf.d|' \
@@ -72,7 +75,7 @@ install-generator: all prepare
 	install -m644 -t $(DESTDIR)/usr/lib/initcpio init_functions init shutdown
 	install -m644 udev/01-memdisk.rules $(DESTDIR)/usr/lib/initcpio/udev/01-memdisk.rules
 
-	cp -at $(DESTDIR)/usr/lib/initcpio hooks install
+	cp -at $(DESTDIR)/usr/lib/initcpio hooks install dlopen-rules
 	install -m644 -t $(DESTDIR)/usr/share/mkinitcpio mkinitcpio.d/*
 
 	install -m644 systemd/mkinitcpio-generate-shutdown-ramfs.service \
