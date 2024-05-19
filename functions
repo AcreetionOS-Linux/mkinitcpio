@@ -999,7 +999,7 @@ add_binary() {
     #   $2: destination on initcpio (optional, defaults to same as source)
     #   $3: mode (optional)
 
-    local line='' regex='' binary='' dest='' mode='' sodep='' resolved='' shebang='' interpreter='' args=()
+    local line='' regex='' binary='' dest='' mode='' sodep='' shebang='' interpreter='' args=()
 
     if [[ "${1:0:1}" != '/' ]]; then
         if ! binary="$(type -P "$1")"; then
