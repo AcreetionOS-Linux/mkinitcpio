@@ -956,8 +956,13 @@ add_runscript() {
     # Adds a runtime script to the initcpio image. The name is derived from the
     # script which calls it as the basename of the caller.
 
-    local fn script hookname="${BASH_SOURCE[1]##*/}"
+    local fn script
     local -a funcs
+
+    if [[ -z "$hookname" ]]; then
+        error "add_runscript called outside of build hook"
+        return
+    fi
 
     if ! script="$(PATH="$_d_hooks" type -P "$hookname")"; then
         error "runtime script for '%s' not found" "$hookname"
@@ -1217,14 +1222,14 @@ initialize_buildroot() {
 }
 
 run_build_hook() {
-    local hook="$1" script='' resolved=''
+    local hookname="$1" script='' resolved=''
     # shellcheck disable=SC2034
     local MODULES=() BINARIES=() FILES=() SCRIPT=''
 
     # find script in install dirs
     # _d_install is assigned in mkinitcpio
     # shellcheck disable=SC2154
-    if ! script="$(PATH="$_d_install" type -P "$hook")"; then
+    if ! script="$(PATH="$_d_install" type -P "$hookname")"; then
         error "Hook '$hook' cannot be found"
         return 1
     fi
