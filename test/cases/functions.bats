@@ -193,7 +193,7 @@ kver_zimage() {
     local workingdir="${BATS_RUN_TMPDIR}/${BATS_TEST_NAME}/mkinitcpio"
 
     install -dm755 "$workingdir"
-    run initialize_buildroot 'none' "$workingdir"
+    TMPDIR="$workingdir" run initialize_buildroot 'none'
 
     # asserting the entire expected tree would be extremely verbose
     assert [ -e "${workingdir}/early/early_cpio" ]
@@ -215,7 +215,7 @@ kver_zimage() {
     local workdir="${BATS_RUN_TMPDIR}/${BATS_TEST_NAME}/workdir"
 
     install -dm555 "$workdir"
-    run initialize_buildroot 'none' "$workdir"
+    TMPDIR="$workdir" run initialize_buildroot 'none'
     assert_failure
     assert_output "==> ERROR: Unable to write to working directory: $workdir"
 }
@@ -321,7 +321,7 @@ kver_zimage() {
     printf '#!%s\n\n:\n' "$interpreter" >"$tmp_bin"
 
     install -d -- "$BUILDROOT"
-    initialize_buildroot 'none' "$BUILDROOT"
+    TMPDIR="$BUILDROOT" initialize_buildroot 'none'
     run add_binary "$tmp_bin"
     assert_output "==> WARNING: Possibly missing '${interpreter}' for script: $tmp_bin"
 }
@@ -333,7 +333,7 @@ kver_zimage() {
     printf '#!/bin/sh\n\n:\n' >"$tmp_bin"
 
     install -d -- "$BUILDROOT"
-    initialize_buildroot 'none' "$BUILDROOT"
+    TMPDIR="$BUILDROOT" initialize_buildroot 'none'
     run add_binary "$tmp_bin" "" 750
     assert_equal "$(stat -c '%a' "${BUILDROOT}/${tmp_bin}")" '750'
 }
