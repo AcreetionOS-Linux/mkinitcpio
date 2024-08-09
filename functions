@@ -1147,18 +1147,20 @@ initialize_buildroot() {
     # creates a temporary directory for the buildroot and initialize it with a
     # basic set of necessary directories and symlinks
 
-    local kernver="$1" generatedir="$2" workdir arch buildroot osreleasefile root
+    local kernver="$1" workdir="$2" arch buildroot osreleasefile
     arch="$(uname -m)"
 
-    if ! workdir="$(mktemp -d --tmpdir mkinitcpio.XXXXXX 2>/dev/null)"; then
-        error 'Failed to create temporary working directory in %s' "${TMPDIR:-/tmp}"
-        return 1
+    if [[ -z "$workdir" ]]; then
+        if ! workdir="$(mktemp -d --tmpdir mkinitcpio.XXXXXX 2>/dev/null)"; then
+            error 'Failed to create temporary working directory in %s' "${TMPDIR:-/tmp}"
+            return 1
+        fi
     fi
     earlyroot="$workdir/early"
-    buildroot="${generatedir:-$workdir/root}"
+    buildroot="$workdir/root"
 
-    if [[ ! -w "${generatedir:-$workdir}" ]]; then
-        error 'Unable to write to build root: %s' "$buildroot"
+    if [[ ! -w "$workdir" ]]; then
+        error 'Unable to write to working directory: %s' "$workdir"
         return 1
     fi
 

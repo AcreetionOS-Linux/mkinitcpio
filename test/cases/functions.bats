@@ -190,13 +190,12 @@ kver_zimage() {
 }
 
 @test "initialize_buildroot success" {
-    local parentdir="${BATS_RUN_TMPDIR}/${BATS_TEST_NAME}" workingdir=''
+    local workingdir="${BATS_RUN_TMPDIR}/${BATS_TEST_NAME}/mkinitcpio"
 
-    install -dm755 "$parentdir"
-    workingdir="$(TMPDIR="$parentdir" initialize_buildroot 'none')"
+    install -dm755 "$workingdir"
+    run initialize_buildroot 'none' "$workingdir"
 
     # asserting the entire expected tree would be extremely verbose
-    assert [ -n "${workingdir}" ]
     assert [ -e "${workingdir}/early/early_cpio" ]
     assert [ -e "${workingdir}/root/VERSION" ]
 }
@@ -213,12 +212,12 @@ kver_zimage() {
 
 # bats test_tags=no_root
 @test "initialize_buildroot unwriteable working directory" {
-    local generatedir="${BATS_RUN_TMPDIR}/${BATS_TEST_NAME}/workdir"
+    local workdir="${BATS_RUN_TMPDIR}/${BATS_TEST_NAME}/workdir"
 
-    install -dm555 "$generatedir"
-    run initialize_buildroot 'none' "$generatedir"
+    install -dm555 "$workdir"
+    run initialize_buildroot 'none' "$workdir"
     assert_failure
-    assert_output "==> ERROR: Unable to write to build root: $generatedir"
+    assert_output "==> ERROR: Unable to write to working directory: $workdir"
 }
 
 @test "add_file regular file" {
