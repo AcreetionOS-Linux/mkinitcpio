@@ -57,7 +57,7 @@ usage: ${0##*/} [options]
    -L, --listhooks              List all available hooks
    -M, --automods               Display modules found via autodetection
    -n, --nocolor                Disable colorized output messages
-       --nopost                 Disable post hooks 
+       --nopost                 Disable post hooks
    -p, --preset <file>          Build specified preset from /etc/mkinitcpio.d
    -P, --allpresets             Process all preset files in /etc/mkinitcpio.d
    -R, --remove                 Remove specified preset images
@@ -1112,8 +1112,8 @@ fi
 
 MODULES_DECOMPRESS="${MODULES_DECOMPRESS:-"no"}"
 
-_d_workdir="$(initialize_buildroot "$KERNELVERSION" "$_opttargetdir")" || exit 1
-BUILDROOT="${_opttargetdir:-$_d_workdir/root}"
+_d_workdir="$(initialize_buildroot "$KERNELVERSION")" || exit 1
+BUILDROOT="$_d_workdir/root"
 EARLYROOT="$_d_workdir/early"
 
 # Source additional configuration files, if no configuration file has been defined either with "-c" or via preset file
@@ -1205,6 +1205,7 @@ if [[ -n "$_optgenimg" ]]; then
     build_image "$_optgenimg" "$_optcompress" || exit 1
     _generated+=("$_optgenimg")
 elif [[ -n "$_opttargetdir" ]]; then
+    cp -a "$BUILDROOT" "$_opttargetdir"
     msg "Build complete."
 else
     msg "Dry run complete, use -g IMAGE to generate a real image"
