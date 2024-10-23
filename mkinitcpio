@@ -15,9 +15,11 @@ _f_config=mkinitcpio.conf
 _d_config=mkinitcpio.conf.d
 _d_hooks="$PWD/hooks:/usr/lib/initcpio/hooks:/lib/initcpio/hooks"
 _d_install="$PWD/install:/usr/lib/initcpio/install:/lib/initcpio/install"
+_d_dlopen_rules="$PWD/dlopen-rules:/usr/lib/initcpio/dlopen-rules:/lib/initcpio/dlopen-rules"
 _d_post="$PWD/post:/usr/lib/initcpio/post:/lib/initcpio/post"
 _d_flag_hooks=
 _d_flag_install=
+_d_flag_dlopen_rules=
 _d_flag_post=
 _d_firmware=({/usr,}/lib/firmware/updates {/usr,}/lib/firmware)
 _d_fwpath=() # the actual firmware lookup path, a subset of _d_firmware listed above
@@ -1012,6 +1014,7 @@ while :; do
             shift
             _d_flag_hooks+="$tmp/hooks:"
             _d_flag_install+="$tmp/install:"
+            _d_flag_dlopen_rules+="$tmp/dlopen-rules:"
             _d_flag_post+="$tmp/post:"
             unset tmp
             ;;
@@ -1038,6 +1041,7 @@ fi
 if [[ -n "$_d_flag_hooks" && -n "$_d_flag_install" && -n "$_d_flag_post" ]]; then
     _d_hooks="${_d_flag_hooks%:}"
     _d_install="${_d_flag_install%:}"
+    _d_dlopen_rules="${_d_flag_dlopen_rules%:}"
     _d_post="${_d_flag_post%:}"
 fi
 
