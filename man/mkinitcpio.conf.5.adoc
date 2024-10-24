@@ -19,10 +19,7 @@ _/etc/mkinitcpio.conf_
 
 mkinitcpio will attempt to read from a configuration file each time it is
 invoked, _/etc/mkinitcpio.conf_ by default. This file defines several variables
-which describe the contents of the image to be generated. In addition to the "main"
-configuration file, drop-in configuration snippets are read
-from _/etc/mkinitcpio.conf.d/*.conf_. These drop-ins have higher precedence and
-override the main configuration file.
+which describe the contents of the image to be generated.
 
 == Variables
 
@@ -81,6 +78,13 @@ override the main configuration file.
      +
     Note that any compressed files will be placed in the uncompressed early CPIO
     to avoid double compression.
+
+*INCLUDE*::
+    Defines an array of additional configuration files to include. If not set
+    and no configuration file is specified explicitly, this falls back to legacy
+    behavior and defaults to _/etc/mkinitcpio.conf.d/*.conf_.
+    Files specified here have higher precedence and override the main
+    configuration file.
 
 == See also
 

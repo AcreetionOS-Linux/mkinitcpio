@@ -64,10 +64,19 @@ prepare:
 	sed -e 's|\./functions|/usr/lib/initcpio/functions|' \
 	    < shell/zsh-completion > $(DESTDIR)/usr/share/zsh/site-functions/_mkinitcpio
 
-install-generator: all prepare
-	chmod 755 $(DESTDIR)/usr/bin/lsinitcpio $(DESTDIR)/usr/bin/mkinitcpio
+	sed -e 's|\(^INCLUDE\)=.*|\1=(/etc/mkinitcpio.conf.d/*.conf)|' \
+	    < mkinitcpio.conf > $(DESTDIR)/etc/mkinitcpio.conf
 
-	install -m644 mkinitcpio.conf $(DESTDIR)/etc/mkinitcpio.conf
+install-generator: all prepare
+	chmod 755 \
+		$(DESTDIR)/usr/bin/lsinitcpio \
+		$(DESTDIR)/usr/bin/mkinitcpio
+
+	chmod 644 \
+		$(DESTDIR)/usr/share/bash-completion/completions/mkinitcpio \
+		$(DESTDIR)/usr/share/zsh/site-functions/_mkinitcpio \
+		$(DESTDIR)/etc/mkinitcpio.conf
+
 	install -m755 -t $(DESTDIR)/usr/lib/initcpio functions
 	install -m644 -t $(DESTDIR)/usr/lib/initcpio init_functions init shutdown
 	install -m644 udev/01-memdisk.rules $(DESTDIR)/usr/lib/initcpio/udev/01-memdisk.rules
