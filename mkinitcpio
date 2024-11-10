@@ -24,7 +24,7 @@ _d_fwpath=() # the actual firmware lookup path, a subset of _d_firmware listed a
 _d_presets=mkinitcpio.d
 
 # options and runtime data
-counter=0
+_counter=0
 _optmoduleroot='' _optgenimg=''
 _optcompress='' _opttargetdir=''
 _optosrelease='' _optukiconfig=''
@@ -537,10 +537,8 @@ uki_add_section() {
     local secname="$1" filename="${2:-/dev/stdin}"
     if [[ ! -f "$filename" ]]; then
         local tmpfile
-        new_temp;
-        tmpfile="$dir""/mkinitcpio.""$counter"
-        counter=$((counter + 1))
-        echo -n "$tmpfile"$'\n' >> /home/joshuak/poddywoddy/stuff/tester
+        tmpfile="$(new_temp)""/mkinitcpio.""$_counter"
+        _counter=$((_counter + 1))
         _tmpfiles+=("$tmpfile")
         cat -- "$filename" > "$tmpfile"
         filename="$tmpfile"
@@ -1047,9 +1045,8 @@ fi
 
 # If we specified --uki but no -g we want to create a temporary initramfs which will be used with the efi executable.
 if [[ -n "$_optuki" && -z "$_optgenimg" ]]; then
-    new_temp;
-    tmpfile="$dir""/mkinitcpio.""$counter"
-    counter=$((counter + 1))
+    tmpfile="$(new_temp)""/mkinitcpio.""$_counter"
+    _counter=$((_counter + 1))
     _tmpfiles+=("$tmpfile")
     _optgenimg="$tmpfile"
     declare -i initcpio_is_temporary=1
@@ -1126,9 +1123,8 @@ EARLYROOT="$_d_workdir/early"
 if [[ -d "$_d_config" ]] && (( _optconfd )); then
     mapfile -d '' conf_files < <(LC_ALL=C.UTF-8 find "$_d_config" -maxdepth 1 -xtype f -name '*.conf' -print0 | sed -z 's/.*\///' | LC_ALL=C.UTF-8 sort -zVu)
     if (( ${#conf_files[@]} )); then
-        new_temp;
-        tmpfile="$dir""/mkinitcpio.""$counter"
-        counter=$((counter + 1))
+        tmpfile="$(new_temp)""/mkinitcpio.""$_counter"
+        _counter=$((_counter + 1))
         _tmpfiles+=("$tmpfile")
         cat -- "$_f_config" > "$tmpfile" || die "Failed to read configuration '%s'" "$_f_config"
         for conf in "${conf_files[@]}"; do

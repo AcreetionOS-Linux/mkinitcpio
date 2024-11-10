@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
 shopt -s extglob
-dir="temp"
+_d_temp_dir="temp"
 
 new_temp() {
-    if [ "$dir" = "temp" ] && ! dir="$(mktemp -d --tmpdir mkinitcpio.XXXXXX 2>/dev/null)"; then
+    if [[ "$_d_temp_dir" == "temp" ]] && ! _d_temp_dir="$(mktemp -d --tmpdir mkinitcpio.XXXXXX 2>/dev/null)"; then
         error 'Failed to create temporary working directory in %s' "${TMPDIR:-/tmp}"
         return 1
     fi
-    return 0
+    echo "$_d_temp_dir"
 }
 
 parseopts() {
@@ -1158,10 +1158,8 @@ initialize_buildroot() {
 
     local kernver="$1" generatedir="$2" workdir arch buildroot osreleasefile root
     arch="$(uname -m)"
-    new_temp
-    var=$?
-    workdir="$dir"
-    if [ "$var" == "1" ]; then
+    workdir="$(new_temp)"
+    if [[ "$?" == "1" ]]; then
         return 1
     fi
     earlyroot="$workdir/early"

@@ -11,6 +11,11 @@ setup() {
     source "functions"
 }
 
+@test "new_temp" {
+    run new_temp
+    refute_output "temp"
+}
+
 @test "detect_compression bzip2" {
     local tmp_img=''
     tmp_img="$(__gen_test_image 'bzip2')"
