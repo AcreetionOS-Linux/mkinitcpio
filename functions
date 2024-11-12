@@ -1158,8 +1158,7 @@ initialize_buildroot() {
 
     local kernver="$1" generatedir="$2" workdir arch buildroot osreleasefile root
     arch="$(uname -m)"
-    workdir="$(new_temp)"
-    if [[ "$?" == "1" ]]; then
+    if ! workdir="$(new_temp)"; then
         return 1
     fi
     earlyroot="$workdir/early"
