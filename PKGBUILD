@@ -1,4 +1,4 @@
-pkgname=mkinitcpio-git
+pkgname=mkinitcpio
 pkgver=$(make version)
 pkgrel=1
 pkgdesc="Modular initramfs image creation utility"
@@ -6,7 +6,7 @@ arch=(any)
 url="https://github.com/AcreetionOS-Linux/mkinitcpio.git"
 license=('GPL')
 groups=('base')
-conflicts=('mkinitcpio')
+conflicts=('mkinitcpio-git')
 provides=("mkinitcpio=$pkgver" "initramfs")
 depends=('mkinitcpio-busybox>=1.19.4-2' 'kmod' 'util-linux>=2.23' 'libarchive' 'coreutils'
          'awk' 'bash' 'binutils' 'findutils' 'grep' 'filesystem>=2011.10-1' 'systemd' 'zstd')
