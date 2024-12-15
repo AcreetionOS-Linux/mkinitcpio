@@ -110,7 +110,9 @@ cleanup() {
             rm -rf -- "$_d_workdir"
         fi
     fi
-
+    if [[ ! "$_d_temp_dir" == "" ]]; then
+        rm -rf -- "$_d_temp_dir"
+    fi
     exit "$err"
 }
 
