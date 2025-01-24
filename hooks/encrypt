@@ -116,6 +116,7 @@ EOF
                 fi
             fi
             if [ -e "/dev/mapper/${cryptname}" ]; then
+                echo "${resolved} unlocked and mapped at /dev/mapper/${cryptname}"
                 if [ "${DEPRECATED_CRYPT}" -eq 1 ]; then
                     export root="/dev/mapper/root"
                 fi
