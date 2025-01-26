@@ -7,6 +7,16 @@ Target = usr/lib/initcpio/*
 Target = usr/lib/firmware/*
 Target = usr/lib/modules/*/extramodules/
 Target = usr/src/*/dkms.conf
+Target = usr/bin/cryptsetup
+Target = usr/bin/lvm
+Target = usr/bin/mdadm
+Target = usr/bin/pdata_tools
+Target = usr/lib/libcryptsetup.so
+Target = usr/lib/libp11-kit.so
+Target = usr/lib/libpcsclite.so
+Target = usr/lib/modprobe.d/
+Target = usr/lib/systemd/systemd
+Target = usr/lib/systemd/systemd-udevd
 
 [Trigger]
 Type = Path
