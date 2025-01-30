@@ -18,7 +18,7 @@ jobs:
 
       - name: Clone from GitLab
         run: |
-          git clone --mirror https://gitlab.example.com/your-group/mkinitcpio.git repo
+          git clone --mirror https://gitlab.archlinux.org/archlinux/mkinitcpio/mkinitcpio.git repo
           cd repo
 
       - name: Push to GitHub
